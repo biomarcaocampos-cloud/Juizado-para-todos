@@ -1,0 +1,5 @@
+{
+  "name": "Gestão de Senhas do Atendimento JEC",
+  "description": "Um aplicativo para gerenciar o sistema de filas do Juizado Especial Cível de Guarulhos. Inclui distribuição de senhas, chamada de senhas para os guichês de atendimento e uma tela de exibição pública.",
+  "requestFramePermissions": []
+}
