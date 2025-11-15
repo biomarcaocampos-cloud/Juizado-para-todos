@@ -211,7 +211,7 @@ const AgendaModal: React.FC<AgendaModalProps> = ({ onClose, attendant, ticketNum
 };
 
 export const ServiceDesk: React.FC = () => {
-  const { state, login, logout, callNextTicket, startService, endService } = useQueue();
+  const { state, login, logout, callSpecificTicket, startService, endService } = useQueue();
   const { currentUser } = useAuth();
 
   const [selectedDeskId, setSelectedDeskId] = useState<number | null>(null);
@@ -227,6 +227,15 @@ export const ServiceDesk: React.FC = () => {
   
   const myActiveDesk = state.desks.find(d => d.user?.id === currentUser?.id);
   const availableDesks = state.desks.filter(d => !d.user);
+  
+  const { pendingPreferential, pendingNormal } = useMemo(() => {
+    if (!loggedInDesk) return { pendingPreferential: 0, pendingNormal: 0 };
+    const deskServices = loggedInDesk.services;
+    const pendingPreferential = state.waitingPreferential.filter(t => deskServices.includes(t.service)).length;
+    const pendingNormal = state.waitingNormal.filter(t => deskServices.includes(t.service)).length;
+    return { pendingPreferential, pendingNormal };
+  }, [state.waitingPreferential, state.waitingNormal, loggedInDesk]);
+
 
   useEffect(() => {
     if (!isServiceActive || !loggedInDesk?.serviceStartTime) {
@@ -338,9 +347,15 @@ export const ServiceDesk: React.FC = () => {
     }
   };
 
-  const handleCallNext = () => {
+  const handleCallNormal = () => {
     if (loggedInDesk) {
-      callNextTicket(loggedInDesk.id);
+      callSpecificTicket(loggedInDesk.id, 'NORMAL');
+    }
+  };
+
+  const handleCallPreferential = () => {
+    if (loggedInDesk) {
+      callSpecificTicket(loggedInDesk.id, 'PREFERENCIAL');
     }
   };
   
@@ -416,16 +431,24 @@ export const ServiceDesk: React.FC = () => {
                 )
               )}
               {!isServiceActive && (
-                  <button
-                  onClick={handleCallNext}
-                  className={`w-full font-bold py-5 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 duration-300 shadow-md ${
-                      isWaitingForAttendantAction
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-gray-900'
-                        : 'bg-gray-700 hover:bg-black text-white'
-                    }`}
-                  >
-                  Chamar Próximo
-                  </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                        onClick={handleCallPreferential}
+                        disabled={pendingPreferential === 0}
+                        className="w-full font-bold py-4 px-2 rounded-lg text-lg transition-transform transform hover:scale-105 duration-300 shadow-md flex flex-col items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-gray-900 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                        <span>Chamar Preferencial</span>
+                        <span className="text-2xl font-black">{pendingPreferential}</span>
+                    </button>
+                    <button
+                        onClick={handleCallNormal}
+                        disabled={pendingNormal === 0}
+                        className="w-full font-bold py-4 px-2 rounded-lg text-lg transition-transform transform hover:scale-105 duration-300 shadow-md flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                        <span>Chamar Normal</span>
+                        <span className="text-2xl font-black">{pendingNormal}</span>
+                    </button>
+                </div>
               )}
             </div>
           </div>
@@ -439,6 +462,10 @@ export const ServiceDesk: React.FC = () => {
                 Serviços: {loggedInDesk.services.map(s => ServiceTypeDetails[s].title).join(', ')}
               </p>
             </div>
+            <button onClick={() => setIsAgendaModalOpen(true)} className="bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+                Novo Agendamento
+            </button>
             <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 flex-grow">
               <h3 className="text-md font-semibold text-white mb-3 text-center">Senhas em Espera</h3>
               <div className="flex flex-col justify-center space-y-3 h-full">
@@ -456,8 +483,8 @@ export const ServiceDesk: React.FC = () => {
                   )}
               </div>
             </div>
-            <button onClick={handleLogout} className="bg-red-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors duration-300 flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <button onClick={handleLogout} className="bg-red-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors duration-300 flex items-center justify-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               Sair da Mesa
             </button>
           </div>
@@ -468,7 +495,7 @@ export const ServiceDesk: React.FC = () => {
         <AgendaModal
             onClose={() => setIsAgendaModalOpen(false)}
             attendant={{ id: currentUser.id, name: getDisplayName(currentUser.fullName) }}
-            ticketNumber={loggedInDesk.currentTicketInfo?.number ?? 'N/A'}
+            ticketNumber={loggedInDesk.currentTicketInfo?.number ?? 'MANUAL'}
         />
       )}
       </>

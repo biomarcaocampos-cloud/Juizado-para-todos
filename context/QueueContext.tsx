@@ -63,7 +63,7 @@ const initialState: QueueState = {
 interface QueueContextType {
   state: QueueState;
   dispenseTicket: (type: 'NORMAL' | 'PREFERENCIAL', service: ServiceType) => Promise<string>;
-  callNextTicket: (deskId: number) => void;
+  callSpecificTicket: (deskId: number, type: 'NORMAL' | 'PREFERENCIAL') => void;
   login: (deskId: number, user: { id: string; displayName: string }, services: ServiceType[]) => void;
   logout: (deskId: number) => void;
   startService: (deskId: number) => void;
@@ -75,7 +75,7 @@ interface QueueContextType {
   clearAlertMessage: () => void;
   addAgendaEntry: (entryData: Omit<AgendaEntry, 'id' | 'data_do_registro' | 'status'>) => Promise<void>;
   updateAgendaEntry: (updatedEntry: AgendaEntry) => Promise<void>;
-  cancelAgendaEntry: (entryId: string) => Promise<void>;
+  cancelAgendaEntry: (entryId: string) => void;
 }
 
 export const QueueContext = createContext<QueueContextType | undefined>(undefined);
@@ -204,7 +204,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
   
-  const callNextTicket = (deskId: number) => {
+  const callSpecificTicket = (deskId: number, type: 'NORMAL' | 'PREFERENCIAL') => {
     setState(prevState => {
         const deskBeingUsed = prevState.desks.find(d => d.id === deskId);
         if (!deskBeingUsed || !deskBeingUsed.user || deskBeingUsed.services.length === 0) {
@@ -216,29 +216,21 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             stateAfterFinalizing = finalizeCurrentTicket(deskBeingUsed, prevState);
         }
 
-        const { waitingPreferential, waitingNormal, calledHistory, desks } = stateAfterFinalizing;
-
+        const { waitingPreferential, waitingNormal, desks } = stateAfterFinalizing;
         const deskServices = deskBeingUsed.services;
-        const availablePreferential = waitingPreferential.filter(t => deskServices.includes(t.service));
-        const availableNormal = waitingNormal.filter(t => deskServices.includes(t.service));
-
-        const preferentialsCalled = calledHistory.filter(t => t.type === 'PREFERENCIAL').length;
-        const normalsCalled = calledHistory.filter(t => t.type === 'NORMAL').length;
-
-        const shouldCallPreferential = availablePreferential.length > 0 &&
-            (preferentialsCalled <= normalsCalled / 2 || availableNormal.length === 0);
 
         let ticketToCall: WaitingTicket | undefined;
-        if (shouldCallPreferential) {
-            ticketToCall = availablePreferential[0];
-        } else if (availableNormal.length > 0) {
-            ticketToCall = availableNormal[0];
-        } else if (availablePreferential.length > 0) {
-            ticketToCall = availablePreferential[0];
+        let queueToSearch: WaitingTicket[];
+        
+        if (type === 'PREFERENCIAL') {
+            queueToSearch = waitingPreferential;
+        } else {
+            queueToSearch = waitingNormal;
         }
-
-        if (!ticketToCall) {
-            // No new ticket found. Finalize current and clear the desk.
+        
+        const ticketIndex = queueToSearch.findIndex(t => deskServices.includes(t.service));
+        
+        if (ticketIndex === -1) {
             const newDesks = desks.map(desk =>
                 desk.id === deskId
                     ? { ...desk, currentTicket: null, currentTicketInfo: null, serviceStartTime: null }
@@ -249,37 +241,16 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 desks: newDesks,
             };
         }
+
+        ticketToCall = queueToSearch[ticketIndex];
 
         let newWaitingPreferential = [...waitingPreferential];
         let newWaitingNormal = [...waitingNormal];
-        let ticketFoundAndRemoved = false;
 
-        if (ticketToCall.type === 'PREFERENCIAL') {
-            const index = newWaitingPreferential.findIndex(t => t.number === ticketToCall!.number);
-            if (index > -1) {
-                newWaitingPreferential.splice(index, 1);
-                ticketFoundAndRemoved = true;
-            }
+        if (type === 'PREFERENCIAL') {
+            newWaitingPreferential.splice(ticketIndex, 1);
         } else {
-            const index = newWaitingNormal.findIndex(t => t.number === ticketToCall!.number);
-            if (index > -1) {
-                newWaitingNormal.splice(index, 1);
-                ticketFoundAndRemoved = true;
-            }
-        }
-
-        if (!ticketFoundAndRemoved) {
-            console.error("Could not find ticket to remove from queue", ticketToCall);
-            // This case is unlikely but if it happens, we should also clear the desk.
-            const newDesks = desks.map(desk =>
-                desk.id === deskId
-                    ? { ...desk, currentTicket: null, currentTicketInfo: null, serviceStartTime: null }
-                    : desk
-            );
-            return {
-                ...stateAfterFinalizing,
-                desks: newDesks,
-            };
+            newWaitingNormal.splice(ticketIndex, 1);
         }
 
         const newCalledTicket = {
@@ -289,7 +260,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             type: ticketToCall.type,
         };
 
-        const newCalledHistory = [newCalledTicket, ...calledHistory];
+        const newCalledHistory = [newCalledTicket, ...stateAfterFinalizing.calledHistory];
         const newDesks = desks.map(desk =>
             desk.id === deskId
                 ? { ...desk, currentTicket: ticketToCall!.number, currentTicketInfo: ticketToCall, serviceStartTime: null }
@@ -475,16 +446,12 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
-  const cancelAgendaEntry = (entryId: string): Promise<void> => {
-    return new Promise((resolve) => {
-        setState(prevState => {
-            const updatedAgenda = prevState.agenda.map(entry => 
-                // FIX: Explicitly cast status to the correct literal union type to avoid type widening issues with object spread.
-                entry.id === entryId ? { ...entry, status: 'CANCELADO' as AgendaEntry['status'] } : entry
-            );
-            resolve();
-            return { ...prevState, agenda: updatedAgenda };
-        });
+  const cancelAgendaEntry = (entryId: string) => {
+    setState(prevState => {
+        const updatedAgenda = prevState.agenda.map(entry =>
+            entry.id === entryId ? { ...entry, status: 'CANCELADO' as AgendaEntry['status'] } : entry
+        );
+        return { ...prevState, agenda: updatedAgenda };
     });
   };
 
@@ -493,7 +460,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     <QueueContext.Provider value={{ 
         state, 
         dispenseTicket, 
-        callNextTicket, 
+        callSpecificTicket, 
         login, 
         logout, 
         startService, 

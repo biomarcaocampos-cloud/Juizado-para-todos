@@ -8,7 +8,7 @@ import { TicketDispenser } from './context/TicketDispenser';
 import { ServiceDesk } from './components/ServiceDesk';
 import { Header } from './components/Header';
 import { useQueue } from './hooks/useQueue';
-import { CompletedService, AbandonedTicket, ServiceTypeDetails, ServiceType, User, ActivityLog, AgendaEntry, LocaisRetorno, LocalRetorno } from './types';
+import { CompletedService, AbandonedTicket, ServiceTypeDetails, ServiceType, User, ActivityLog, AgendaEntry, LocaisRetorno, LocalRetorno, ServiceDesk as ServiceDeskType } from './types';
 import { storageService } from './services/storageService';
 import { LoginScreen } from './components/auth/LoginScreen';
 import { RegisterScreen } from './components/auth/RegisterScreen';
@@ -322,35 +322,35 @@ const AgendaManagement: React.FC = () => {
 
     const getStatusBadge = (status: AgendaEntry['status']) => {
         switch (status) {
-            case 'AGENDADO': return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-200 text-yellow-800">AGENDADO</span>;
-            case 'CONCLUÍDO': return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-200 text-green-800">CONCLUÍDO</span>;
-            case 'CANCELADO': return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-300 text-gray-800">CANCELADO</span>;
-            default: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-700">{status}</span>;
+            case 'AGENDADO': return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">AGENDADO</span>;
+            case 'CONCLUÍDO': return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">CONCLUÍDO</span>;
+            case 'CANCELADO': return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">CANCELADO</span>;
+            default: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">{status}</span>;
         }
     };
 
     const StatCard: React.FC<{ title: string; value: string; }> = ({ title, value }) => (
-        <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-gray-500 text-sm uppercase font-semibold">{title}</p>
-            <p className="text-gray-900 text-3xl font-bold">{value}</p>
+        <div className="bg-gray-800 p-4 rounded-xl shadow">
+            <p className="text-gray-400 text-sm uppercase font-semibold">{title}</p>
+            <p className="text-white text-3xl font-bold">{value}</p>
         </div>
     );
 
     return (
-        <div className="bg-gray-100 text-gray-800 p-6 rounded-xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-white p-4 rounded-lg shadow">
-                <div><label className="text-sm font-semibold text-gray-600">Data Inicial</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full mt-1 bg-gray-50 p-2 rounded-md border border-gray-300"/></div>
-                <div><label className="text-sm font-semibold text-gray-600">Data Final</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full mt-1 bg-gray-50 p-2 rounded-md border border-gray-300"/></div>
-                <div><label className="text-sm font-semibold text-gray-600">Pesquisar por Nome</label><input type="text" value={nameFilter} onChange={e => setNameFilter(e.target.value)} placeholder="Busca global por nome..." className="w-full mt-1 bg-gray-50 p-2 rounded-md border border-gray-300"/></div>
-                <div><label className="text-sm font-semibold text-gray-600">Pesquisar por CPF</label><input type="text" value={cpfFilter} onChange={e => setCpfFilter(e.target.value)} placeholder="Busca global por CPF..." className="w-full mt-1 bg-gray-50 p-2 rounded-md border border-gray-300"/></div>
+        <div className="bg-gray-900 text-white p-6 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-gray-800 p-4 rounded-lg">
+                <div><label className="text-sm font-semibold text-gray-400">Data Inicial</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full mt-1 bg-gray-700 text-white p-2 rounded-md border border-gray-600"/></div>
+                <div><label className="text-sm font-semibold text-gray-400">Data Final</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full mt-1 bg-gray-700 text-white p-2 rounded-md border border-gray-600"/></div>
+                <div><label className="text-sm font-semibold text-gray-400">Pesquisar por Nome</label><input type="text" value={nameFilter} onChange={e => setNameFilter(e.target.value)} placeholder="Busca global por nome..." className="w-full mt-1 bg-gray-700 text-white p-2 rounded-md border border-gray-600"/></div>
+                <div><label className="text-sm font-semibold text-gray-400">Pesquisar por CPF</label><input type="text" value={cpfFilter} onChange={e => setCpfFilter(e.target.value)} placeholder="Busca global por CPF..." className="w-full mt-1 bg-gray-700 text-white p-2 rounded-md border border-gray-600"/></div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <StatCard title="Total de Agendamentos Pendentes" value={String(totalPending)} />
                 <StatCard title="Agendamentos no Período/Busca" value={String(filteredAgenda.length)} />
             </div>
-            <div className="overflow-x-auto bg-white rounded-lg shadow">
+            <div className="overflow-x-auto bg-gray-800 rounded-lg">
                 <table className="w-full text-left min-w-[840px]">
-                    <thead className="bg-gray-50 text-gray-600">
+                    <thead className="bg-gray-700 text-gray-300">
                         <tr>
                             <th className="p-3 text-sm font-semibold uppercase">Nome</th>
                             <th className="p-3 text-sm font-semibold uppercase">CPF</th>
@@ -361,22 +361,22 @@ const AgendaManagement: React.FC = () => {
                             <th className="p-3 text-sm font-semibold uppercase text-center">Ações</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-700">
                         {filteredAgenda.map(entry => (
-                            <tr key={entry.id} className="hover:bg-gray-50 even:bg-gray-50">
-                                <td className="p-3 font-semibold text-gray-900">{entry.nome}</td>
-                                <td className="p-3 font-mono text-gray-700">{entry.cpf || 'N/A'}</td>
-                                <td className="p-3 text-gray-700">{new Date(entry.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                                <td className="p-3 font-mono text-gray-700">{entry.hora_retorno}</td>
-                                <td className="p-3 text-gray-700">{entry.local_retorno}</td>
+                            <tr key={entry.id} className="hover:bg-gray-700">
+                                <td className="p-3 font-semibold text-white">{entry.nome}</td>
+                                <td className="p-3 font-mono text-gray-300">{entry.cpf || 'N/A'}</td>
+                                <td className="p-3 text-gray-300">{new Date(entry.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                                <td className="p-3 font-mono text-gray-300">{entry.hora_retorno}</td>
+                                <td className="p-3 text-gray-300">{entry.local_retorno}</td>
                                 <td className="p-3">{getStatusBadge(entry.status)}</td>
                                 <td className="p-3 text-center">
                                     {entry.status === 'AGENDADO' && (
                                         <div className="flex justify-center items-center gap-4">
-                                            <button onClick={() => setEditingEntry(entry)} title="Editar Agendamento" className="text-blue-600 hover:text-blue-800">
+                                            <button onClick={() => setEditingEntry(entry)} title="Editar Agendamento" className="text-blue-400 hover:text-blue-300">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
                                             </button>
-                                            <button onClick={() => handleCancelEntry(entry.id)} title="Desativar Agendamento (Desistência)" className="text-red-600 hover:text-red-800">
+                                            <button onClick={() => handleCancelEntry(entry.id)} title="Desativar Agendamento (Desistência)" className="text-red-500 hover:text-red-400">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
                                             </button>
                                         </div>
@@ -386,7 +386,7 @@ const AgendaManagement: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-                {filteredAgenda.length === 0 && <p className="text-center text-gray-500 py-8">Nenhum agendamento encontrado para os filtros selecionados.</p>}
+                {filteredAgenda.length === 0 && <p className="text-center text-gray-400 py-8">Nenhum agendamento encontrado para os filtros selecionados.</p>}
             </div>
             {editingEntry && <EditAgendaModal entry={editingEntry} onClose={() => setEditingEntry(null)} onSave={updateAgendaEntry} />}
         </div>
@@ -406,6 +406,45 @@ const formatTime = (ms: number) => {
 const formatDateForInput = (date: Date) => date.toISOString().split('T')[0];
 const isSameDay = (d1: Date, d2: Date) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
 
+const ActiveDesksModal: React.FC<{ desks: ServiceDeskType[]; onClose: () => void; }> = ({ desks, onClose }) => {
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="active-desks-modal-title">
+            <div className="bg-gray-800 text-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h3 id="active-desks-modal-title" className="text-xl font-bold">Mesas em Atendimento</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white text-3xl">&times;</button>
+                </div>
+                <div className="overflow-y-auto p-4">
+                    <table className="w-full text-left table-auto">
+                        <thead className="bg-gray-700 sticky top-0">
+                            <tr>
+                                <th className="p-3 text-sm font-semibold uppercase">Mesa</th>
+                                <th className="p-3 text-sm font-semibold uppercase">Atendente</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-600">
+                            {desks.length > 0 ? desks.map(desk => (
+                                <tr key={desk.id} className="hover:bg-gray-700">
+                                    <td className="p-3 font-mono text-lg">{desk.id}</td>
+                                    <td className="p-3 text-lg">{desk.user?.displayName}</td>
+                                </tr>
+                            )) : (
+                                <tr><td colSpan={2} className="text-center p-8 text-gray-400">Nenhuma mesa em atendimento no momento.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ManagementScreen: React.FC = () => {
     const { state, updateTips, setAlertMessage, clearAlertMessage } = useQueue();
     const [startDate, setStartDate] = useState(new Date());
@@ -417,6 +456,7 @@ const ManagementScreen: React.FC = () => {
     const [ticketSearchResults, setTicketSearchResults] = useState<any[] | null>(null);
     const [searchedTicket, setSearchedTicket] = useState('');
     const [currentTab, setCurrentTab] = useState<'stats' | 'agenda' | 'users'>('stats');
+    const [showActiveDesksModal, setShowActiveDesksModal] = useState(false);
     
     const displayData = (() => {
         const today = new Date();
@@ -435,9 +475,14 @@ const ManagementScreen: React.FC = () => {
         return { ...state, completedServices: aggregatedData.completedServices, abandonedTickets: aggregatedData.abandonedTickets, waitingNormal: [], waitingPreferential: [], isLive: false };
     })();
     
-    const { completedServices, waitingNormal, waitingPreferential, abandonedTickets, isLive } = displayData;
+    const { completedServices, waitingNormal, waitingPreferential, abandonedTickets, isLive, desks } = displayData;
+
+    const activeDesks = useMemo(() => 
+        isLive ? desks.filter(d => d.user && d.serviceStartTime) : [],
+        [desks, isLive]
+    );
     
-    const { totalWaiting, totalServed, totalAbandoned, estimatedTotalRemainingTime, statsByServiceType, statsByUser } = (() => {
+    const { totalServed, totalAbandoned, estimatedTotalRemainingTime, statsByServiceType, statsByUser } = (() => {
         const totalServed = completedServices.length;
         const totalServiceDuration = completedServices.reduce((sum, s) => sum + s.serviceDuration, 0);
         const overallAvgServiceTime = totalServed > 0 ? totalServiceDuration / totalServed : 0;
@@ -466,7 +511,6 @@ const ManagementScreen: React.FC = () => {
         }).sort((a, b) => b.count - a.count);
 
         return {
-            totalWaiting: waitingNormal.length + waitingPreferential.length,
             totalServed,
             totalAbandoned: abandonedTickets.length,
             estimatedTotalRemainingTime: (waitingNormal.length + waitingPreferential.length) * overallAvgServiceTime,
@@ -570,10 +614,16 @@ const ManagementScreen: React.FC = () => {
                         <span>até</span>
                         <input type="date" value={formatDateForInput(endDate)} onChange={e => setEndDate(new Date(e.target.value + 'T00:00:00'))} className="bg-gray-800 p-2 rounded-md border border-gray-700"/>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        {isLive && <StatCard title="Aguardando" value={String(totalWaiting)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.281-1.265-.743-1.675M10 9a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} />}
-                        <StatCard title="Realizados" value={String(totalServed)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {isLive && (
+                            <>
+                                <StatCard title="Preferenciais Aguardando" value={String(waitingPreferential.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>} />
+                                <StatCard title="Normais Aguardando" value={String(waitingNormal.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} />
+                                <StatCard title="Em Atendimento" value={String(activeDesks.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.284-1.255-.758-1.659M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.284-1.255.758-1.659M12 12a4 4 0 100-8 4 4 0 000 8zm0 0v1.5a2.5 2.5 0 005 0V12a5 5 0 00-5-5z" /></svg>} onClick={() => setShowActiveDesksModal(true)} disabled={activeDesks.length === 0} />
+                            </>
+                        )}
                         <StatCard title="Não Compareceu" value={String(totalAbandoned)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} onClick={() => setShowAbandonedModal(true)} disabled={totalAbandoned === 0} />
+                        <StatCard title="Realizados" value={String(totalServed)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
                         {isLive && <StatCard title="Estimativa Restante" value={formatTime(estimatedTotalRemainingTime)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />}
                     </div>
 
@@ -637,6 +687,7 @@ const ManagementScreen: React.FC = () => {
             {modalContent && <DetailsModal title={modalContent.title} services={modalContent.services} onClose={() => setModalContent(null)} />}
             {showAbandonedModal && <AbandonedTicketsModal title={`Senhas Abandonadas`} tickets={abandonedTickets} onClose={() => setShowAbandonedModal(false)} />}
             {isMessageModalOpen && <MessageManagementModal onClose={() => setIsMessageModalOpen(false)} tips={state.tips} alertMessage={state.alertMessage} updateTips={updateTips} setAlertMessage={setAlertMessage} clearAlertMessage={clearAlertMessage} />}
+            {showActiveDesksModal && <ActiveDesksModal desks={activeDesks} onClose={() => setShowActiveDesksModal(false)} />}
         </div>
     );
 };

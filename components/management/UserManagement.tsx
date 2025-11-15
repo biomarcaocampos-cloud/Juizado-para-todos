@@ -232,14 +232,14 @@ export const UserManagement: React.FC = () => {
     ).sort((a, b) => a.fullName.localeCompare(b.fullName));
 
     return (
-        <div className="bg-white text-gray-800 p-6 rounded-xl">
+        <div className="bg-gray-900 text-white p-6 rounded-xl">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                 <input
                     type="text"
                     placeholder="Filtrar por nome ou CPF..."
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className="bg-gray-100 text-gray-900 placeholder-gray-500 p-2 rounded-md border border-gray-300 w-full sm:w-auto"
+                    className="bg-gray-800 text-white placeholder-gray-400 p-2 rounded-md border border-gray-600 w-full sm:w-auto"
                 />
                 <button onClick={() => { setEditingUser(null); setIsCreating(true); }} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
@@ -248,7 +248,7 @@ export const UserManagement: React.FC = () => {
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left min-w-[640px]">
-                    <thead className="bg-gray-100 text-gray-600">
+                    <thead className="bg-gray-700 text-gray-300">
                         <tr>
                             <th className="p-3 uppercase text-sm font-semibold">Usuário</th>
                             <th className="p-3 uppercase text-sm font-semibold">CPF</th>
@@ -257,23 +257,23 @@ export const UserManagement: React.FC = () => {
                             <th className="p-3 uppercase text-sm font-semibold text-center">Ações</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-700">
                         {filteredUsers.map(user => {
                             return (
                                 <tr key={user.id}>
                                     <td className="p-3 flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-gray-200 text-gray-500 overflow-hidden flex-shrink-0">
+                                        <div className="h-10 w-10 rounded-full bg-gray-700 text-gray-400 overflow-hidden flex-shrink-0">
                                             {user.profilePicture ? <img src={user.profilePicture} alt={`Foto de ${user.fullName}`} className="h-full w-full object-cover"/> : <UserIcon />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-900">{getDisplayName(user.fullName)}</p>
-                                            <p className="text-sm text-gray-500">{user.fullName}</p>
+                                            <p className="font-bold text-white">{getDisplayName(user.fullName)}</p>
+                                            <p className="text-sm text-gray-400">{user.fullName}</p>
                                         </div>
                                     </td>
-                                    <td className="p-3 font-mono">{user.cpf}</td>
-                                    <td className="p-3">{user.role === 'MANAGER' ? 'Gestor' : 'Atendente'}</td>
+                                    <td className="p-3 font-mono text-gray-300">{user.cpf}</td>
+                                    <td className="p-3 text-gray-300">{user.role === 'MANAGER' ? 'Gestor' : 'Atendente'}</td>
                                     <td className="p-3 text-center">
-                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
+                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.isActive ? 'bg-green-900 text-green-300' : 'bg-gray-600 text-gray-300'}`}>
                                             {user.isActive ? 'Ativo' : 'Inativo'}
                                         </span>
                                     </td>
@@ -281,14 +281,14 @@ export const UserManagement: React.FC = () => {
                                         <div className="flex justify-center gap-4">
                                             <button 
                                                 onClick={() => setEditingUser(user)} 
-                                                className="text-gray-600 hover:bg-gray-100 p-1 rounded-full transition-colors"
+                                                className="text-gray-400 hover:bg-gray-700 p-1 rounded-full transition-colors"
                                                 title="Editar Usuário"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
                                             </button>
                                             <button 
                                                 onClick={() => setViewingUser(user)} 
-                                                className="text-blue-600 hover:bg-blue-100 p-1 rounded-full transition-colors" 
+                                                className="text-blue-400 hover:bg-gray-700 p-1 rounded-full transition-colors" 
                                                 title="Ver Histórico"
                                             >
                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 flex-shrink-0"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
@@ -300,7 +300,7 @@ export const UserManagement: React.FC = () => {
                         })}
                     </tbody>
                 </table>
-                 {filteredUsers.length === 0 && <p className="text-center text-gray-500 py-8">Nenhum usuário encontrado.</p>}
+                 {filteredUsers.length === 0 && <p className="text-center text-gray-400 py-8">Nenhum usuário encontrado.</p>}
             </div>
 
             {(isCreating || editingUser) && (
