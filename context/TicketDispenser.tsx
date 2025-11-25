@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQueue } from '../hooks/useQueue';
 import { ServiceType, ServiceTypeDetails } from '../types';
+import { ServerStatusIndicator } from '../components/ServerStatusIndicator';
 
 declare global {
   interface Window {
@@ -35,6 +36,7 @@ export const TicketDispenser: React.FC = () => {
   const [isDispensing, setIsDispensing] = useState(false);
   const [reinsertTicketNumber, setReinsertTicketNumber] = useState('');
   const [reinsertMessage, setReinsertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isServerOnline, setIsServerOnline] = useState(false);
 
   const handleTypeSelect = (type: 'NORMAL' | 'PREFERENCIAL') => {
     setSelectedType(type);
@@ -50,6 +52,11 @@ export const TicketDispenser: React.FC = () => {
         setStep('confirmation');
     } catch (error) {
         console.error("Failed to dispense ticket:", error);
+        if (error instanceof Error) {
+            alert(error.message);
+        } else {
+            alert('Ocorreu um erro desconhecido ao emitir a senha.');
+        }
     } finally {
         setIsDispensing(false);
     }
@@ -152,13 +159,14 @@ export const TicketDispenser: React.FC = () => {
           <>
             <h2 className="text-3xl font-bold text-white mb-8">Retire sua Senha</h2>
             <div className="space-y-6">
-              <button onClick={() => handleTypeSelect('NORMAL')} className="w-full bg-blue-600 text-white font-bold py-6 px-4 rounded-xl text-2xl hover:bg-blue-700 transition-transform transform hover:scale-105 duration-300 shadow-lg">Atendimento Normal</button>
-              <button onClick={() => handleTypeSelect('PREFERENCIAL')} className="w-full bg-yellow-500 text-gray-900 font-bold py-6 px-4 rounded-xl text-2xl hover:bg-yellow-600 transition-transform transform hover:scale-105 duration-300 shadow-lg">Atendimento Preferencial</button>
+              <button onClick={() => handleTypeSelect('NORMAL')} disabled={!isServerOnline} className="w-full bg-blue-600 text-white font-bold py-6 px-4 rounded-xl text-2xl hover:bg-blue-700 transition-transform transform hover:scale-105 duration-300 shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none">Atendimento Normal</button>
+              <button onClick={() => handleTypeSelect('PREFERENCIAL')} disabled={!isServerOnline} className="w-full bg-yellow-500 text-gray-900 font-bold py-6 px-4 rounded-xl text-2xl hover:bg-yellow-600 transition-transform transform hover:scale-105 duration-300 shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none">Atendimento Preferencial</button>
             </div>
             <div className="mt-8">
                 <button 
                     onClick={() => setStep('reinsert')} 
-                    className="w-full bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-xl text-lg hover:bg-gray-400 transition-colors duration-300"
+                    disabled={!isServerOnline}
+                    className="w-full bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-xl text-lg hover:bg-gray-400 transition-colors duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed"
                 >
                     Reinserir Senha
                 </button>
@@ -178,7 +186,7 @@ export const TicketDispenser: React.FC = () => {
                     <button
                         key={key}
                         onClick={() => handleServiceSelect(serviceType)}
-                        disabled={isDispensing}
+                        disabled={isDispensing || !isServerOnline}
                         className={`w-full text-left bg-gray-800 border-2 p-4 rounded-lg transition-colors duration-200 disabled:opacity-50 ${colors.border} ${colors.hoverBg}`}
                     >
                         <p className={`font-bold text-xl ${colors.text}`}>{title}</p>
@@ -204,7 +212,7 @@ export const TicketDispenser: React.FC = () => {
                         className="w-full text-center text-2xl font-mono p-3 border-2 bg-gray-800 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                         required
                     />
-                    <button type="submit" disabled={isDispensing} className="w-full bg-red-600 text-white font-bold py-4 rounded-xl text-xl hover:bg-red-700 transition-colors duration-300 shadow-lg disabled:bg-gray-400">
+                    <button type="submit" disabled={isDispensing || !isServerOnline} className="w-full bg-red-600 text-white font-bold py-4 rounded-xl text-xl hover:bg-red-700 transition-colors duration-300 shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
                         {isDispensing ? 'Verificando...' : 'Confirmar'}
                     </button>
                 </form>
@@ -243,6 +251,7 @@ export const TicketDispenser: React.FC = () => {
         <div className="mt-10 text-sm text-gray-400">
           <p>Senhas na fila Normal: {state.waitingNormal.length}</p>
           <p>Senhas na fila Preferencial: {state.waitingPreferential.length}</p>
+          <ServerStatusIndicator onStatusChange={setIsServerOnline} />
         </div>
       </div>
     </div>

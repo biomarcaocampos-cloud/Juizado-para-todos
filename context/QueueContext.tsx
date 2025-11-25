@@ -3,6 +3,7 @@ import { QueueState, ServiceDesk, WaitingTicket, CompletedService, AbandonedTick
 import { storageService } from '../services/storageService';
 
 const TOTAL_DESKS = 20;
+const API_BASE_URL = 'http://localhost:3001'; // Fixed: Point to the correct backend port
 
 export interface ReinsertResult {
   success: boolean;
@@ -174,34 +175,49 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
   
-  const dispenseTicket = (type: 'NORMAL' | 'PREFERENCIAL', service: ServiceType): Promise<string> => {
-    return new Promise((resolve) => {
-      setState(prevState => {
-        let ticketNumberStr: string;
-        let newTicket: WaitingTicket;
-        if (type === 'NORMAL') {
-          const ticketNumber = prevState.nextNormalTicket;
-          ticketNumberStr = `N${String(ticketNumber).padStart(3, '0')}`;
-          newTicket = { number: ticketNumberStr, dispenseTimestamp: Date.now(), type, service };
-          resolve(ticketNumberStr);
-          return {
+  const dispenseTicket = async (type: 'NORMAL' | 'PREFERENCIAL', service: ServiceType): Promise<string> => {
+    // 1. LOCAL GENERATION (Always works)
+    let ticketNumber = '';
+    
+    setState(prevState => {
+        const prefix = type === 'NORMAL' ? 'N' : 'P';
+        const sequence = type === 'NORMAL' ? prevState.nextNormalTicket : prevState.nextPreferentialTicket;
+        ticketNumber = `${prefix}${String(sequence).padStart(3, '0')}`;
+        
+        const newTicket: WaitingTicket = {
+            number: ticketNumber,
+            dispenseTimestamp: Date.now(),
+            type,
+            service
+        };
+
+        const newState = {
             ...prevState,
-            nextNormalTicket: ticketNumber + 1,
-            waitingNormal: [...prevState.waitingNormal, newTicket],
-          };
-        } else {
-          const ticketNumber = prevState.nextPreferentialTicket;
-          ticketNumberStr = `P${String(ticketNumber).padStart(3, '0')}`;
-          newTicket = { number: ticketNumberStr, dispenseTimestamp: Date.now(), type, service };
-          resolve(ticketNumberStr);
-          return {
-            ...prevState,
-            nextPreferentialTicket: ticketNumber + 1,
-            waitingPreferential: [...prevState.waitingPreferential, newTicket],
-          };
-        }
-      });
+            nextNormalTicket: type === 'NORMAL' ? prevState.nextNormalTicket + 1 : prevState.nextNormalTicket,
+            nextPreferentialTicket: type === 'PREFERENCIAL' ? prevState.nextPreferentialTicket + 1 : prevState.nextPreferentialTicket,
+            waitingNormal: type === 'NORMAL' ? [...prevState.waitingNormal, newTicket] : prevState.waitingNormal,
+            waitingPreferential: type === 'PREFERENCIAL' ? [...prevState.waitingPreferential, newTicket] : prevState.waitingPreferential,
+        };
+        return newState;
     });
+
+    // 2. SERVER SYNC (Optional - Fire and forget or log error)
+    // We don't await this for the UI update to keep it snappy, but we handle the network call
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/tickets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, service }),
+        });
+
+        if (!response.ok) {
+            console.warn("Server sync failed: Running in Local Mode.");
+        }
+    } catch (error) {
+        console.warn("Backend unreachable: Running in Local Mode.", error);
+    }
+
+    return ticketNumber;
   };
   
   const callSpecificTicket = (deskId: number, type: 'NORMAL' | 'PREFERENCIAL') => {

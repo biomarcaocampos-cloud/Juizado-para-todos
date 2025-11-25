@@ -499,14 +499,17 @@ const ManagementScreen: React.FC = () => {
             return acc;
         }, {} as Record<ServiceType, { count: number; avgWaitTime: number; avgServiceTime: number; }>);
 
-        const statsByUser = [...new Map(completedServices.map(s => [s.userId, { user: s.userName, services: [] as CompletedService[] }])).values()].map(u => {
-             const userServicesByName = completedServices.filter(s => s.userName === u.user);
-            const count = userServicesByName.length;
+        const statsByUser = Array.from(new Set(completedServices.map(s => s.userId))).map(userId => {
+            const userServices = completedServices.filter(s => s.userId === userId);
+            const userName = userServices[0]?.userName || 'Desconhecido';
+            const count = userServices.length;
+            const avgDuration = count > 0 ? userServices.reduce((a, c) => a + c.serviceDuration, 0) / count : 0;
+            
             return {
-                user: u.user,
-                userId: userServicesByName[0]?.userId,
+                user: userName,
+                userId: userId,
                 count,
-                avgDuration: count > 0 ? userServicesByName.reduce((a, c) => a + c.serviceDuration, 0) / count : 0
+                avgDuration
             };
         }).sort((a, b) => b.count - a.count);
 
@@ -619,7 +622,7 @@ const ManagementScreen: React.FC = () => {
                             <>
                                 <StatCard title="Preferenciais Aguardando" value={String(waitingPreferential.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>} />
                                 <StatCard title="Normais Aguardando" value={String(waitingNormal.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} />
-                                <StatCard title="Em Atendimento" value={String(activeDesks.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.284-1.255-.758-1.659M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.284-1.255.758-1.659M12 12a4 4 0 100-8 4 4 0 000 8zm0 0v1.5a2.5 2.5 0 005 0V12a5 5 0 00-5-5z" /></svg>} onClick={() => setShowActiveDesksModal(true)} disabled={activeDesks.length === 0} />
+                                <StatCard title="Em Atendimento" value={String(activeDesks.length)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.284-1.255-.758-1.659M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.284-1.255.758-1.659M12 12a4 4 0 100-8 4 4 0 000 8zm0 0v1.5a2.5 2.5 0 005 0V12a5 5 0 00-5-5z" /></svg>} onClick={() => setShowActiveDesksModal(true)} disabled={activeDesks.length === 0} />
                             </>
                         )}
                         <StatCard title="Não Compareceu" value={String(totalAbandoned)} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} onClick={() => setShowAbandonedModal(true)} disabled={totalAbandoned === 0} />
